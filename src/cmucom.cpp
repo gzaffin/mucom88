@@ -57,7 +57,7 @@
 #define STRCASECMP strcasecmp
 #else
 #ifdef _WIN32
-#define STRCASECMP _strcmpi
+#define STRCASECMP _stricmp
 #else
 #define STRCASECMP strcasecmp
 #endif

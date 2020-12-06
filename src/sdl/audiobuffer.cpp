@@ -19,8 +19,8 @@ AudioBuffer::AudioBuffer(int channels, int bufferSize, int blockSize) {
     BufferSize = bufferSize;
     BlockSize = blockSize;
 
-    AudioData = new short[BufferSize];
-    memset(AudioData, 0, sizeof(short) * BufferSize);
+    AudioData = new short[BufferSize * Channels];
+    memset(AudioData, 0, sizeof(short) * BufferSize * Channels);
 }
 
 AudioBuffer::~AudioBuffer() {
@@ -36,7 +36,11 @@ void AudioBuffer::Reset() {
 
 // バッファサイズ - 再生領域
 int AudioBuffer::GetLeft() {
-    return (BufferSize - BlockSize) - WriteCount;
+    if (WritePosition > ReadPosition) {
+            return ((BufferSize * Channels) - WriteCount) + ReadPosition;
+    } else {
+        return ReadPosition - WriteCount;
+    }
 }
 
 // ミリ秒からサンプル数を作成する
@@ -68,13 +72,13 @@ template <typename T> void AudioBuffer::Write(T input,int frames) {
     int pos = WritePosition;
 
     // int -> short
-    for(int i=0; i < frames*2; i++) {
+    for(int i=0; i < frames*Channels; i++) {
         int v=input[i];
 
         output[pos] = v > 32767 ? 32767 : (v < -32768 ? -32768 : v);
         pos++;
         count++;
-        if (pos >= BufferSize) pos = 0;
+        if (pos >= (BufferSize*Channels)) pos = 0;
     }
 
     WriteCount = count;

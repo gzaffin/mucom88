@@ -18,7 +18,18 @@
 #else
 #include <unistd.h>
 #define CHDIR chdir
-#define _MAX_PATH 512
+#endif
+
+#ifndef MAX_PATH
+#define	MAX_PATH	(260)
+#endif
+
+#ifndef _MAX_PATH
+#define	_MAX_PATH	MAX_PATH
+#define	_MAX_DRIVE	3
+#define	_MAX_DIR	256
+#define	_MAX_FNAME	256
+#define	_MAX_EXT	256
 #endif
 
 #include "cmucom.h"
@@ -40,7 +51,7 @@
 #define STRCASECMP strcasecmp
 #else
 #ifdef _WIN32
-#define STRCASECMP _strcmpi
+#define STRCASECMP _stricmp
 #else
 #define STRCASECMP strcasecmp
 #endif

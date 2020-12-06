@@ -5,9 +5,11 @@
 #include <stdio.h>
 #include "osdep_sdl.h"
 
-#define AUDIO_BUFFER_BLOCK 2048
-#define AUDIO_BUFFER_SIZE (AUDIO_BUFFER_BLOCK * 8)
-#define AUDIO_CHANNELS 2
+#define AUDIO_BUFFER_BLOCK (4096)
+#define AUDIO_BUFFER_NUM_BLOCKS (16)
+#define AUDIO_BUFFER_SIZE (AUDIO_BUFFER_BLOCK * AUDIO_BUFFER_NUM_BLOCKS)
+#define AUDIO_S16_SIZE (2)
+#define AUDIO_CHANNELS (2)
 
 // Win32では10ms以下にはならないので注意
 #define TIMER_INTERVAL 10
@@ -46,24 +48,26 @@ bool OsDependentSdl::InitAudio(void *hwnd, int Rate, int BufferSize) {
 
 
     SDL_AudioSpec af;
+    SDL_AudioDeviceID dev;
+    SDL_memset(&af, 0, sizeof(af));
     af.freq     = Rate;
     af.format   = AUDIO_S16;
     af.channels = AUDIO_CHANNELS;
-    af.samples  = AUDIO_BUFFER_BLOCK / 2;
+    af.samples  = AUDIO_BUFFER_BLOCK; // https://wiki.libsdl.org/SDL_AudioSpec samples number refers to the size of the audio buffer in sample frames.
     af.callback = SdlAudioCallback;
     af.userdata = this;
 
     // 1msあたりのサンプル数
     Buffer->SetRate(Rate);
 
-    if (SDL_OpenAudio(&af, NULL) < 0) {
+    if ((dev = SDL_OpenAudioDevice(NULL, 0, &af, NULL, SDL_AUDIO_ALLOW_ANY_CHANGE)) < 0) {
         printf("Audio Error!!\n");
         return false;
     }
 
     AudioOpenFlag = true;
 
-    SDL_PauseAudio(0);
+    SDL_PauseAudioDevice(dev, 0);
     return true;
 }
 
@@ -86,8 +90,27 @@ bool OsDependentSdl::SendAudio(int ms) {
 
     //　バッファ送出を開始
     if (s == 0) {
+        if (Buffer->WriteCount == 0) {
+            // half BufferSize of AudioData writing
+            const int buffBlocks = (AUDIO_BUFFER_NUM_BLOCKS / 2);
+            int buffCnt;
+            for (buffCnt = 0; buffCnt < buffBlocks; buffCnt++) {
+                Buffer->ClearTick();
+                int smp[AUDIO_BUFFER_BLOCK];
+                memset(smp,0,sizeof(int) * AUDIO_BUFFER_BLOCK);
+                UserAudioCallback->mix = smp;
+                UserAudioCallback->size = AUDIO_BUFFER_BLOCK/2;
+                UserAudioCallback->Run();
+
+                Buffer->Write(smp,AUDIO_BUFFER_BLOCK/2);
+            }
         Buffer->SendBuffer = true;
-        return true;
+        } else {
+            Buffer->SendBuffer = false;
+            return false;
+        }
+    } else {
+        Buffer->SendBuffer = true;
     }
 
     int UpdateTick = ms;
@@ -111,31 +134,33 @@ bool OsDependentSdl::SendAudio(int ms) {
 // オーディオコールバック
 static void SdlAudioCallback(void *param, Uint8 *data, int len) {
     OsDependentSdl *inst = (OsDependentSdl *)param;
-    inst->AudioMain((short *)data, len / 4);
+    inst->AudioMain((short *)data, len);
 }
 
 
 // オーディオ処理メイン
-void OsDependentSdl::AudioMain(short *buffer, int frames) {
-    int Samples = frames * AUDIO_CHANNELS;
-    if (!Buffer->SendBuffer) {
-        memset(buffer, 0, Samples * sizeof(short));
+void OsDependentSdl::AudioMain(short *buffer, int len) {
+    int Samples = len / (AUDIO_S16_SIZE * AUDIO_CHANNELS); // sample frames. A sample frame is a chunk of audio data of the size specified in format multiplied by the number of channels.
+    if (true != Buffer->SendBuffer) {
+        memset(buffer, 0, len);
         return;
     }
 
     // 出力
     int count = Buffer->WriteCount;
     int pos = Buffer->ReadPosition;
-    short *input = Buffer->AudioData;
+    int *input = (int *)(&Buffer->AudioData[pos]);
+    int *sdlBuffer = (int *)buffer;
 
     bool Under = false;
 
-    for(int i = 0; i < frames * 2; i++) {
-        if (count <= 0) { Under = true; buffer[i] = 0; continue; }
+    for(int i = 0; i < Samples; i++) {
+        if (count <= 0) { Under = true; *sdlBuffer++ = 0; continue; }
 
-        buffer[i] = input[pos++];
-        count--;
-        if (pos >= AUDIO_BUFFER_SIZE) pos = 0;
+        *sdlBuffer++ = *input++;
+        pos += 2;
+        count -= 2;
+        if (pos >= (AUDIO_BUFFER_SIZE * AUDIO_CHANNELS)) pos = 0;
     }
 
     if (Under) Buffer->UnderCount++;
