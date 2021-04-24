@@ -6,12 +6,12 @@
 //			Special thanks to : WING☆, Makoto Wada (Ancient corp.), boukichi, kumatan
 //
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
+#include <cctype>
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <direct.h>
 #define getcwd _getcwd
 #define CHDIR _chdir
@@ -56,6 +56,33 @@
 #define STRCASECMP strcasecmp
 #endif
 #endif
+
+/*----------------------------------------------------------*/
+/*
+ * path splitter function split_dir
+ */
+
+static int split_dir( const char *file , char *dir )
+{
+	char *p = nullptr;
+	int len = 0;
+
+#ifdef _MSC_VER
+	p = std::strrchr( (char*)file, '\\' );
+#else
+	p = std::strrchr( (char*)file, '/' );
+#endif
+
+	if ( nullptr != p )
+	{
+		p++;
+		len = (int)( p - file );
+		std::strncpy( dir , file , len );
+	}
+	dir[ len ] = 0;
+
+	return len;
+}
 
 /*----------------------------------------------------------*/
 
@@ -254,6 +281,20 @@ int main( int argc, char *argv[] )
 		}
 	}
 
+	mydir[0] = 0;
+	split_dir( fname, mydir );
+	if (0 == mydir[0])
+	{
+		mydir[0] = '.';
+#ifdef _MSC_VER
+		mydir[1] = '\\';
+#else
+		mydir[1] = '/';
+#endif
+		mydir[2] = 0;
+	}
+	mucom.ChangeDirectory( mydir );
+
 	// ログ設定
 	if (logfile) {
 		mucom.SetLogFilename(logfile);
@@ -274,7 +315,7 @@ int main( int argc, char *argv[] )
 
 
 	bool play_direct = false;
-	const char* ext = strrchr(fname, '.');
+	const char* ext = std::strrchr(fname, '.');
 
 	// mmlファイルはコンパイルをするようにする
 	if (ext != NULL && STRCASECMP(ext, ".muc") == 0) cmpopt |= MUCOM_CMPOPT_COMPILE;

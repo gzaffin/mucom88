@@ -1,6 +1,7 @@
 // OsDependent SDL
 // BouKiCHi 2019
 
+#include <cstring>
 #include <SDL.h>
 #include <stdio.h>
 #include "osdep_sdl.h"
@@ -268,11 +269,13 @@ int OsDependentSdl::ExecPluginEditorCommand(Mucom88Plugin *plg, int, int, int, v
 
 int OsDependentSdl::GetDirectory(char *buf, int size)
 {
+	std::strncpy(buf, osDepDir, size);
 	return 0;
 }
 
 int OsDependentSdl::ChangeDirectory(const char *dir)
 {
+	osDepDir = dir;
 	return 0;
 }
 

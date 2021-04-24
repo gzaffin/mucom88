@@ -388,6 +388,9 @@ public:
 	//	PCM file service
 	int LoadPCM(const char *fname = MUCOM_DEFAULT_PCMFILE);
 
+	//	Change Directory service
+	int ChangeDirectory(const char *dirname);
+
 	//	MUCOM88 MUC/MUB service
 	int LoadMusic(const char *fname, int num = 0);
 	int CompileFile(const char *fname, const char *sname, int option=0);

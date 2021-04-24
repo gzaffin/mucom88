@@ -749,7 +749,6 @@ int CMucom::Fade(void)
 	return 0;
 }
 
-
 int CMucom::LoadPCM(const char * fname)
 {
 	//		ADPCMデータ読み込み
@@ -761,6 +760,13 @@ int CMucom::LoadPCM(const char * fname)
 	if (vm->LoadPcm(fname) == 0) return 0;
 	PRINTF("#PCM file not found [%s].\r\n", fname);
 	return -1;
+}
+
+int CMucom::ChangeDirectory(const char *dirname)
+{
+	vm->ChangeDirectory(dirname);
+
+	return 0;
 }
 
 int CMucom::LoadMusic(const char * fname, int num)
@@ -954,6 +960,9 @@ int CMucom::LoadFMVoice(const char *fname, bool sw)
 	*dirname = 0;
 	vm->GetDirectory(dirname, MUCOM_FILE_MAXSTR);
 	voice_pathname = std::string(dirname);
+
+	voice_pathname += voicefilename;
+	voicefilename = voice_pathname;
 
 	voicedata = NULL;
 	voicedata_org = NULL;

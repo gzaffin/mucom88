@@ -70,7 +70,7 @@ public:
 	virtual bool GetBreakStatus() = 0;
 
 protected:
-
+	const char *osDepDir = nullptr;
 };
 
 #endif
