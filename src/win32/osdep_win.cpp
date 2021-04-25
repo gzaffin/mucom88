@@ -489,7 +489,7 @@ int OsDependentWin32::GetDirectory(char *buf, int size)
 {
 	//		OS依存のフォルダ名取得
 	//
-	if (GetCurrentDirectory(size, buf) == 0) return -1;
+	std::strncpy(buf, osDepDir, size);
 	return 0;
 }
 
@@ -498,7 +498,7 @@ int OsDependentWin32::ChangeDirectory(const char *dir)
 {
 	//		OS依存のフォルダ移動
 	//
-	if (SetCurrentDirectory(dir) == 0) return -1;
+	osDepDir = dir;
 	return 0;
 }
 

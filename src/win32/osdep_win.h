@@ -93,6 +93,7 @@ private:
 	bool SetBreakHook();
 	bool GetBreakStatus();
 
+	const char* osDepDir = nullptr;
 };
 
 
