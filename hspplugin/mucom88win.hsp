@@ -26,8 +26,8 @@
 
 ;#define EDITOR_DEBUG
 
-#const VER_NUMBER 56
-#define APP_VER "0.56"
+#const VER_NUMBER 70
+#define APP_VER "0.70"
 
 #define EDITOR_TITLE "MUCOM88"
 
@@ -107,8 +107,8 @@
 	mucomres welcome_mes
 	welcome_mes+="#Z80 emulation by Yasuo Kuwahara 2002-2018(C)\n"
 	welcome_mes+="#FM Sound Generator by cisc 1998, 2003(C)\n"
-	welcome_mes+="#SCCI system / adpcm converter by gasshi 2018(C)\n"
-	welcome_mes+="#Windows version by ONION software/onitama 2018-2024(C)\n"
+	welcome_mes+="#FM Tone Editor / SCCI2 system / adpcm converter by gasshi 2018-(C)\n"
+	welcome_mes+="#Windows version by ONION software/onitama 2018-(C)\n"
 
 	buf=welcome_mes
 	compflag=0
@@ -908,8 +908,8 @@
 
 	mes "\nSCCIデバイス使用スイッチ(*)"
 	objsize 120,24
-	chkbox "SCCIを使用",scci_mode
-	button "SCCI設定...",*to_sccicfg
+	chkbox "SCCI2を使用",scci_mode
+	button "SCCI2設定...",*to_sccicfg
 
 	objsize 240,24
 	mes "\nMucomDotNet フォルダ"
@@ -992,7 +992,7 @@
 	screen 0,wx,wy,0,app_winx,app_winy
 	goto *main_editor
 *to_sccicfg
-	exec dir_exe+"\\scciconfig.exe"
+	exec dir_exe+"\\scci2config.exe"
 	goto *main2
 *to_fgcolor
 	dialog "",33:if stat!=1 : goto *main2
